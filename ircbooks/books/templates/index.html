@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<h1>Login</h1>
+<form>
+	<label for="nickname">Nickname</label>
+	<input type="text" id="nickname_field" name="nickname">
+	<button type="submit" id="submit_nickname">Connect</button>
+</form>
+<script src="{% static 'js/login.js' %}"></script>
+{% endblock %}
