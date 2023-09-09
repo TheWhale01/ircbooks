@@ -13,12 +13,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 	async def connect(self):
 		await self.accept()
-		self.bot = IRCbot(self.server, self.port, self.nickname)
+		self.bot = IRCbot(self.server, self.port)
 		print(await self.bot.connect())
 
 	async def disconnect(self, close_code):
-		pass
-		print(await self.bot.disconnect())
+		await self.bot.disconnect()
 
 	async def receive(self, text_data):
 		text_data_json = json.loads(text_data)
@@ -26,11 +25,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 		event = text_data_json['event']
 		if (event == 'nickname'):
+			data = {'event': 'nickname'};
 			try:
 				self.nickname = text_data_json['data']
 				await self.bot.try_connect(self.nickname)
+				data.update({'data': self.nickname})
 			except Exception as e:
 				print(e)
 				self.nickname = None
-
-		# await self.send(text_data=json.dumps({'data': message}))
+				data.update({'data': None})
+			await self.send(text_data=json.dumps(data))
