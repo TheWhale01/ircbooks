@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  frontend:
+    container_name: ircbooks_frontend
+    ports:
+      - "8080:8080"
+    env_file:
+      - frontend.env
+    build: ./frontend
+    volumes:
+      - ./frontend:/workspace
+  backend:
+    container_name: ircbooks_backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - backend.env
+    build: ./backend
+    volumes:
+      - ./backend:/workspace
