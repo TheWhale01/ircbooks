@@ -11,6 +11,8 @@
 import Head from '@/components/Head.vue';
 import Loading from '@/components/Loading.vue';
 import NickNameError from '@/components/NickNameError.vue';
+import router from '@/router';
+import { IRCconnected, connectToWebSocket } from "@/services/websocket"
 
 export default {
 	components: {
@@ -29,9 +31,7 @@ export default {
 	},
 
 	mounted() {
-		this.socket = new WebSocket('ws://127.0.0.1:3000/ws/books/');
-		this.socket.onopen = () => { console.log('connected to websocket server.'); }
-		this.socket.onclose = () => { console.log('disconnected from websocket server.'); }
+		this.socket = connectToWebSocket('ws://127.0.0.1:3000/ws/books/');
 		this.socket.onmessage = (response) => {
 			const data = JSON.parse(response.data);
 			if (data['event'] === 'nickname') {
@@ -41,7 +41,8 @@ export default {
 					this.nickname = '';
 					return ;
 				}
-				console.log("Good nickname: " + this.nickname);
+				IRCconnected(this.nickname);
+				router.push('/search');
 			}
 		}
 	},

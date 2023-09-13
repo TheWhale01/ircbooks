@@ -25,7 +25,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 		await self.bot.connect()
 		event = text_data_json['event']
 		if (event == 'nickname'):
-			data = {'event': 'nickname'};
+			data = {'event': 'nickname'}
 			try:
 				self.nickname = text_data_json['data']
 				await self.bot.try_connect(self.nickname)
@@ -46,4 +46,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 				data.update({'data': False})
 			self.send(text_data=json.dumps(data))
 		elif (event == 'search'):
-			pass
+			# wait for file, extract it, parse it into json
+			await self.send(text_data=json.dumps({
+				'event': 'search',
+				'data': True,
+			}))
