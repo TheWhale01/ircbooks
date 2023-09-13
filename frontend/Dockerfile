@@ -1,7 +1,7 @@
 FROM node:lts-alpine
 
-EXPOSE 8080
-
 WORKDIR /workspace
 
-ENTRYPOINT [ "/bin/sh", "-c", "npm start" ]
+EXPOSE 8080
+
+ENTRYPOINT [ "/bin/sh", "-c", "npm install --save && npm run dev" ]

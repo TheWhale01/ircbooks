@@ -33,7 +33,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			except Exception as e:
 				self.nickname = None
 				data.update({'data': None})
-			print(await self.bot.disconnect())
+			await self.bot.disconnect()
 			await self.send(text_data=json.dumps(data))
 		elif (event == 'IRCconnect'):
 			data = {'event': 'IRCconnect'}
@@ -47,6 +47,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			self.send(text_data=json.dumps(data))
 		elif (event == 'search'):
 			pass
-
-		elif (event == 'disconnect'):
-			print(await self.bot.disconnect())

@@ -41,7 +41,6 @@ class IRCbot:
 		self.nickname = nickname
 		await self.user()
 		response = await self.nick()
-		print(response)
 		if (self.get_response_code(response) > 400):
 			raise Exception('Wrong nickname')
 
