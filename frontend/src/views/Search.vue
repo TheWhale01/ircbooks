@@ -1,53 +1,56 @@
 <template>
 	<Head />
 	<p>This is the search view.</p>
-	<form v-on:submit.prevent="searchBooks">
+	<form v-on:submit.prevent="">
 		<input type="text" placeholder="Search for a book or an author" v-model="bookName">
 		<button type="submit" @click="searchBooks()">Search</button>
 	</form>
 	<Loading v-if="showLoading" />
+	<SearchResults v-if="results" :results="results"/>
 </template>
 <script lang="ts">
 import Head from '@/components/Head.vue';
 import { getWebSocketInstance } from '@/services/websocket';
-import router from '@/router';
 import Loading from '@/components/Loading.vue';
+import SearchResults from '@/components/SearchResults.vue';
+import router from '@/router';
 
 export default {
 	components: {
 		Head,
 		Loading,
+		SearchResults,
 	},
 
 	data() {
 		return {
+			connected: false as boolean,
 			socket: {} as WebSocket,
 			showLoading: false as boolean,
 			bookName: '' as string,
+			results: [] as string[],
 		};
 	},
 
 	mounted() {
 		try {
 			this.socket = getWebSocketInstance();
-			this.socket.send(JSON.stringify({
-				'event': 'IRCconnect',
-				'data': null,
-			}));
+			this.connected = true;
 		}
-		catch { router.push('/'); }
-		this.socket.onmessage = (response) => {
-			const data = JSON.parse(response.data);
-			console.log(data);
-			if (data['event'] === 'IRCconnect')
-				console.log(data['data']);
-			else if (data['event'] === 'search')
+		catch (error: unknown) {router.push('/');}
+		this.socket.onmessage = (event) => {
+			const data = JSON.parse(event.data);
+			if (data['event'] === 'search') {
 				this.showLoading = false;
+				this.results = data['data'];
+			}
 		}
+		this.socket.onclose = () => { router.push('/'); }
 	},
 
 	unmounted() {
-		this.socket.close();
+		if (this.connected)
+			this.socket.close();
 	},
 
 	methods: {

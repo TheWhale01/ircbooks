@@ -1,6 +1,6 @@
 <template>
 	<Head />
-	<form v-on:submit.prevent="try_connect">
+	<form v-on:submit.prevent="">
 		<input type="text" name="nickname" placeholder="Nickname" v-model="nickname">
 		<button type="submit" @click="try_connect()">Connect</button>
 	</form>
@@ -35,13 +35,22 @@ export default {
 		this.socket.onmessage = (response) => {
 			const data = JSON.parse(response.data);
 			if (data['event'] === 'nickname') {
-				this.showLoading = false;
 				if (!data['data']) {
 					this.showNickNameError = true;
 					this.nickname = '';
 					return ;
 				}
 				IRCconnected(this.nickname);
+				this.socket.send(JSON.stringify({
+					'event': 'IRCconnect',
+					'data': null,
+				}));
+			}
+			else if (data['event'] === 'IRCconnect') {
+				if (!data['data']) {
+					this.showNickNameError = true;
+					return ;
+				}
 				router.push('/search');
 			}
 		}
