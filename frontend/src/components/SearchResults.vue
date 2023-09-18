@@ -7,7 +7,6 @@
 </template>
 <script lang="ts">
 import router from '@/router';
-import { getWebSocketInstance } from '@/services/websocket';
 
 interface Book {
 	author: string;
@@ -27,20 +26,20 @@ export default {
 	},
 
 	mounted() {
-		try {this.socket = getWebSocketInstance();}
-		catch (error) {router.push('/');}
-		this.socket.onmessage = (event) => { console.log(event.data); }
-		for (let result of this.results) {
-			// Do not show
-			var startIndex = 0
-			var stopIndex = result.indexOf(' ');
-			console.log(result.substring(startIndex, stopIndex));
+		// try {this.socket = getWebSocketInstance();}
+		// catch (error) {router.push('/');}
+		// this.socket.onmessage = (event) => { console.log(event.data); }
+		// for (let result of this.results) {
+		// 	// Do not show
+		// 	var startIndex = 0
+		// 	var stopIndex = result.indexOf(' ');
+		// 	console.log(result.substring(startIndex, stopIndex));
 
-		}
+		// }
 	},
 
 	methods: {
-		download_book(book: Book) {}
+		// download_book(book: Book) {}
 	}
 }
 </script>

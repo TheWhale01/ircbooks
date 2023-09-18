@@ -3,3 +3,4 @@ env/
 SearchBot*
 backend/books/static/search_history/*
 backend/books/static/downloaded/*
+__pycache__

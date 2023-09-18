@@ -10,10 +10,11 @@
 </template>
 <script lang="ts">
 import Head from '@/components/Head.vue';
-import { getWebSocketInstance } from '@/services/websocket';
 import Loading from '@/components/Loading.vue';
 import SearchResults from '@/components/SearchResults.vue';
 import router from '@/router';
+import { Socket } from 'socket.io-client';
+import { getSocketInstance } from '@/services/socketio.service';
 
 export default {
 	components: {
@@ -24,8 +25,8 @@ export default {
 
 	data() {
 		return {
+			socket: {} as Socket,
 			connected: false as boolean,
-			socket: {} as WebSocket,
 			showLoading: false as boolean,
 			bookName: '' as string,
 			results: [] as string[],
@@ -34,33 +35,25 @@ export default {
 
 	mounted() {
 		try {
-			this.socket = getWebSocketInstance();
+			this.socket = getSocketInstance();
 			this.connected = true;
 		}
-		catch (error: unknown) {router.push('/');}
-		this.socket.onmessage = (event) => {
-			const data = JSON.parse(event.data);
-			if (data['event'] === 'search') {
-				this.showLoading = false;
-				this.results = data['data'];
-			}
-		}
-		this.socket.onclose = () => { router.push('/'); }
+		catch (error: unknown) { router.push('/'); }
+		this.socket.on('searchBook', (response) => {
+			console.log("results found");
+		})
 	},
 
 	unmounted() {
 		if (this.connected)
-			this.socket.close();
+			this.socket.disconnect();
 	},
 
 	methods: {
 		searchBooks() {
 			if (!this.bookName)
 				return;
-			this.socket.send(JSON.stringify({
-				'event': 'search',
-				'data': this.bookName,
-			}));
+			this.socket.emit('searchBook', this.bookName);
 			this.showLoading = true;
 		},
 	},

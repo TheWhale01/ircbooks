@@ -2,7 +2,7 @@
 	<Head />
 	<form v-on:submit.prevent="">
 		<input type="text" name="nickname" placeholder="Nickname" v-model="nickname">
-		<button type="submit" @click="try_connect()">Connect</button>
+		<button type="submit" @click="try_nickname()">Connect</button>
 	</form>
 	<Loading v-if="showLoading" />
 	<NickNameError v-if="showNickNameError" />
@@ -11,8 +11,9 @@
 import Head from '@/components/Head.vue';
 import Loading from '@/components/Loading.vue';
 import NickNameError from '@/components/NickNameError.vue';
+import { Socket } from 'socket.io-client';
+import { connectSocket } from '@/services/socketio.service';
 import router from '@/router';
-import { IRCconnected, connectToWebSocket } from "@/services/websocket"
 
 export default {
 	components: {
@@ -23,51 +24,37 @@ export default {
 
 	data() {
 		return {
-			socket: {} as WebSocket,
+			socket: {} as Socket,
 			nickname: '' as string,
 			showLoading: false as boolean,
 			showNickNameError: false as boolean,
 		}
 	},
 
-	mounted() {
-		this.socket = connectToWebSocket('ws://127.0.0.1:3000/ws/books/');
-		this.socket.onmessage = (response) => {
-			const data = JSON.parse(response.data);
-			if (data['event'] === 'nickname') {
-				if (!data['data']) {
-					this.showNickNameError = true;
-					this.nickname = '';
-					return ;
-				}
-				IRCconnected(this.nickname);
-				this.socket.send(JSON.stringify({
-					'event': 'IRCconnect',
-					'data': null,
-				}));
-			}
-			else if (data['event'] === 'IRCconnect') {
-				if (!data['data']) {
-					this.showNickNameError = true;
-					return ;
-				}
-				router.push('/search');
-			}
-		}
+	beforeUnmount() {
+		this.socket.disconnect();
 	},
 
+	mounted() {
+		this.socket = connectSocket('ws://127.0.0.1:3000/');
+		this.socket.on('try_nickname', (response: boolean) => {
+			if (!response) {
+				this.showNickNameError = true;
+				this.showLoading = false;
+			}
+			else
+				router.push('/search');
+		});
+	},
+	
 	methods: {
-		try_connect() {
-			if (this.nickname === '')
+		try_nickname() {
+			this.showNickNameError = false;
+			if (!this.nickname)
 				return ;
-			if (this.showNickNameError)
-				this.showNickNameError = false;
-			this.socket.send(JSON.stringify({
-				'event': 'nickname',
-				'data': this.nickname,
-			}));
+			this.socket.emit('try_nickname', this.nickname);
 			this.showLoading = true;
 		}
-	},
+	}
 }
 </script>

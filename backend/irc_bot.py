@@ -11,23 +11,22 @@ class IRCbot:
 		self.__channel = None
 		self.__reader = None
 		self.__writer = None
+		self.__nickname = None
 		self.__search_history_path = './static/search_history'
 		self.__downloaded_book_path = './static/downloaded'
-
-		self.nickname = None
-		self.create_download_dirs()
+		self.__create_download_dirs()
 	
-	def create_download_dirs(self):
+	def __create_download_dirs(self):
 		if (not os.path.exists(self.__downloaded_book_path)):
 			os.makedirs(self.__downloaded_book_path)
 		if (not os.path.exists(self.__search_history_path)):
 			os.makedirs(self.__search_history_path)
 	
-	def make_command(self, cmd, args):
+	def __make_command(self, cmd, args):
 		command = cmd + ' ' + ' '.join(args) + '\r\n'
 		return (command.encode())
 
-	async def get_response(self):
+	async def __get_response(self):
 		response = b''
 		while (True):
 			data = await self.__reader.read(self.__BUFF_SIZE)
@@ -37,7 +36,7 @@ class IRCbot:
 			response += data
 		return (response.decode())
 	
-	def get_response_code(self, response: str()) -> int():
+	def __get_response_code(self, response: str()) -> int():
 		responses = response.split('\r\n')
 		index = 0
 		while (not(re.findall('\d{3,}', responses[index]))):
@@ -47,47 +46,39 @@ class IRCbot:
 
 	async def connect(self):
 		self.__reader, self.__writer = await asyncio.open_connection(self.__server, self.__port)
-		return (await self.get_response())
-	
-	async def try_connect(self, nickname):
-		self.nickname = nickname
-		await self.user()
-		response = await self.nick()
-		if (self.get_response_code(response) > 400):
-			return (False)
-		self.disconnect()
-		return (True)
+		return (await self.__get_response())
 
 	async def user(self):
-		self.__writer.write(self.make_command('USER', [self.nickname, '0', '*', f':{self.nickname}']))
-		return (await self.get_response())
+		self.__writer.write(self.__make_command('USER', ['IRCbot'] * 4))
+		return (await self.__get_response())
 	
-	async def nick(self):
-		self.__writer.write(self.make_command('NICK', [self.nickname]))
-		return (await self.get_response())
+	async def nick(self, nickname):
+		self.__writer.write(self.__make_command('NICK', [nickname]))
+		response = await self.__get_response()
+		if (self.__get_response_code(response) > 400):
+			raise Exception('Wrong nickname')
+		self.__nickname = nickname
+		return (response)
 
 	async def join(self, channel_name):
 		self.__channel = channel_name
-		self.__writer.write(self.make_command('JOIN', [self.__channel]))
-		return (await self.get_response())
+		self.__writer.write(self.__make_command('JOIN', [self.__channel]))
+		return (await self.__get_response())
 	
 	async def privmsg(self, message):
 		if (not self.__channel):
-			raise Exception('__channel not joined.')
-		self.__writer.write(self.make_command('PRIVMSG', [self.__channel, f":{message}"]))
-		return (await self.get_response())
+			raise Exception('channel not joined.')
+		self.__writer.write(self.__make_command('PRIVMSG', [self.__channel, f":{message}"]))
+		return (await self.__get_response())
 
-	async def disconnect(self, message = 'Goodbye'):
-		self.__writer.write(self.make_command('QUIT :', [message]))
-		response = await self.get_response()
+	async def disconnect(self):
 		self.__writer.close()
 		await self.__writer.wait_closed()
-		return (response)
 	
 	async def search_book(self, book_name):
 		response = await self.privmsg(f'@search {book_name}')
 		while ("DCC SEND" not in response):
-			response = await self.get_response()
+			response = await self.__get_response()
 		args = response.split(':')[2]
 		args = args.split(' ')
 		filename = os.path.join(self.__search_history_path, args[2])
@@ -125,15 +116,14 @@ class IRCbot:
 			os.remove(filename_back)
 		return (filename)
 
-# async def main():
-# 	bot = IRCbot('irc.irchighway.net', 6667)
-# 	bot.nickname = 'whale'
-# 	await bot.connect()
-# 	print(await bot.user())
-# 	print(await bot.nick())
-# 	print(await bot.join('#ebooks'))
-# 	print(await bot.search_book('percy jackson'))
-# 	print(await bot.disconnect())
+async def main():
+	bot = IRCbot('irc.irchighway.net', 6669)
+	await bot.connect()
+	print(await bot.user())
+	print(await bot.nick('whale01'))
+	print(await bot.join('#ebooks'))
+	# print(await bot.search_book('percy jackson'))
+	print(await bot.disconnect())
 
-# if (__name__ == "__main__"):
-# 	asyncio.run(main())
+if (__name__ == "__main__"):
+	asyncio.run(main())
