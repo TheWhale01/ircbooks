@@ -6,7 +6,7 @@
 		<button type="submit" @click="searchBooks()">Search</button>
 	</form>
 	<Loading v-if="showLoading" />
-	<SearchResults v-if="results" :results="results"/>
+	<SearchResults v-if="showResults" :results="results"/>
 </template>
 <script lang="ts">
 import Head from '@/components/Head.vue';
@@ -28,6 +28,7 @@ export default {
 			socket: {} as Socket,
 			connected: false as boolean,
 			showLoading: false as boolean,
+			showResults: false as boolean,
 			bookName: '' as string,
 			results: [] as string[],
 		};
@@ -37,10 +38,13 @@ export default {
 		try {
 			this.socket = getSocketInstance();
 			this.connected = true;
+			this.socket.on('disconnect', () => { router.push('/'); });
 		}
 		catch (error: unknown) { router.push('/'); }
 		this.socket.on('searchBook', (response) => {
-			console.log("results found");
+			this.showLoading = false;
+			this.results = response;
+			this.showResults = true;
 		})
 	},
 

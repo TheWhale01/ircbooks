@@ -76,27 +76,49 @@ class IRCbot:
 		await self.__writer.wait_closed()
 	
 	async def search_book(self, book_name):
-		response = await self.privmsg(f'@search {book_name}')
-		while ("DCC SEND" not in response):
-			response = await self.__get_response()
-		args = response.split(':')[2]
-		args = args.split(' ')
-		filename = os.path.join(self.__search_history_path, args[2])
-		ip_addr = args[3]
-		port = int(args[4])
-		file_size = int(args[5].replace('\x01\r\n', ''))
-		filename = await self.download_file(filename, ip_addr, port, file_size)
+		search_history = os.listdir(self.__search_history_path)
+		filename = ""
 		results = []
+		for file in search_history:
+			if (book_name in file):
+				filename = os.path.join(self.__search_history_path, file)
+		if (not filename):
+			response = await self.privmsg(f'@search {book_name}')
+			while ("DCC SEND" not in response):
+				response = await self.__get_response()
+			args = response.split(':')[2]
+			args = args.split(' ')
+			filename = os.path.join(self.__search_history_path, args[2])
+			ip_addr = args[3]
+			port = int(args[4])
+			file_size = int(args[5].replace('\x01\r\n', ''))
+			filename = await self.__download_file(filename, ip_addr, port, file_size)
 		with open(filename, 'r') as file:
 			while (True):
 				line = file.readline()
 				if (not line):
 					break
-				if (line[0] == '!'):
+				line = line.replace('\n', '')
+				if (line.startswith('!')):
 					results.append(line)
 		return (results)
 
-	async def download_file(self, filename, ip_addr, __port, file_size):
+	async def download_book(self, book_string):
+		response = await self.privmsg(book_string)
+		while ("DCC SEND" not in response):
+			response = await self.__get_response()
+		# response = response.split('\n')[-1]
+		print(response)
+		# args = response.split(':')[2]
+		# args = args.split('"')
+		# print(args)
+		# filename = os.path.join(self.__downloaded_book_path, args[1])
+		# ip_addr = args[2]
+		# port = int(args[3])
+		# file_size = int(args[4].replace('\x01\r\n', ''))
+		# filename = await self.__download_file(filename, ip_addr, port, file_size)
+
+	async def __download_file(self, filename, ip_addr, __port, file_size):
 		rd, wr = await asyncio.open_connection(ip_addr, __port)
 		with open(filename, 'wb') as file:
 			bytes = 0
@@ -119,11 +141,11 @@ class IRCbot:
 async def main():
 	bot = IRCbot('irc.irchighway.net', 6669)
 	await bot.connect()
-	print(await bot.user())
-	print(await bot.nick('whale01'))
-	print(await bot.join('#ebooks'))
-	# print(await bot.search_book('percy jackson'))
-	print(await bot.disconnect())
+	await bot.user()
+	await bot.nick('whale01')
+	await bot.join('#ebooks')
+	await bot.search_book('percy jackson')
+	await bot.disconnect()
 
 if (__name__ == "__main__"):
 	asyncio.run(main())

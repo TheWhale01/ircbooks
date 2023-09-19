@@ -24,6 +24,7 @@ export default {
 
 	data() {
 		return {
+			disconnect: true as boolean,
 			socket: {} as Socket,
 			nickname: '' as string,
 			showLoading: false as boolean,
@@ -32,7 +33,8 @@ export default {
 	},
 
 	beforeUnmount() {
-		this.socket.disconnect();
+		if (this.disconnect)
+			this.socket.disconnect();
 	},
 
 	mounted() {
@@ -41,9 +43,10 @@ export default {
 			if (!response) {
 				this.showNickNameError = true;
 				this.showLoading = false;
+				return ;
 			}
-			else
-				router.push('/search');
+			this.disconnect = false;
+			router.push('/search');
 		});
 	},
 	
