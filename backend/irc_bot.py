@@ -5,6 +5,7 @@ import os
 
 class IRCbot:
 	def __init__(self, server, port):
+		os.umask(0)
 		self.__server = server
 		self.__port = port
 		self.__BUFF_SIZE = 4096
@@ -85,7 +86,11 @@ class IRCbot:
 		if (not filename):
 			response = await self.privmsg(f'@search {book_name}')
 			while ("DCC SEND" not in response):
+				print(response)
+				if ('SearchBot' in response and 'Sorry' in response):
+					raise Exception('No book found.')
 				response = await self.__get_response()
+			print(response)
 			args = response.split(':')[2]
 			args = args.split(' ')
 			filename = os.path.join(self.__search_history_path, args[2])
@@ -105,18 +110,15 @@ class IRCbot:
 
 	async def download_book(self, book_string):
 		response = await self.privmsg(book_string)
-		while ("DCC SEND" not in response):
+		while ('DCC SEND' not in response):
 			response = await self.__get_response()
-		# response = response.split('\n')[-1]
-		print(response)
-		# args = response.split(':')[2]
-		# args = args.split('"')
-		# print(args)
-		# filename = os.path.join(self.__downloaded_book_path, args[1])
-		# ip_addr = args[2]
-		# port = int(args[3])
-		# file_size = int(args[4].replace('\x01\r\n', ''))
-		# filename = await self.__download_file(filename, ip_addr, port, file_size)
+		args = response.split(':')[2].split('"')
+		filename = os.path.join(self.__downloaded_book_path, args[1])
+		connect_infos = args[2].split(' ')
+		ip_addr = connect_infos[1]
+		port = int(connect_infos[2])
+		file_size = int(connect_infos[3].replace('\x01\r\n', ''))
+		filename = await self.__download_file(filename, ip_addr, port, file_size)
 
 	async def __download_file(self, filename, ip_addr, __port, file_size):
 		rd, wr = await asyncio.open_connection(ip_addr, __port)
@@ -144,7 +146,8 @@ async def main():
 	await bot.user()
 	await bot.nick('whale01')
 	await bot.join('#ebooks')
-	await bot.search_book('percy jackson')
+	await bot.search_book('bonsoir je ne suis pas moi')
+	# await bot.download_book('!Dumbledore Gemma Jackson - [Percy Place 01] - Impossible Dream (retail) (epub).epub')
 	await bot.disconnect()
 
 if (__name__ == "__main__"):

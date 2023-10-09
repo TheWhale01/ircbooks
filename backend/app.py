@@ -71,7 +71,12 @@ async def handleTryNickname(sid, data: str()):
 
 @sio.on('searchBook')
 async def handleSearchBook(sid, data: str()):
-	response = await bots[sid].search_book(data)
+	response = None
+	try:
+		response = await bots[sid].search_book(data)
+	except Exception as e:
+		await sio.emit('searchBook', None, room=sid)
+		return 
 	result = []
 	for line in response:
 		result.append(parseLine(line))
@@ -80,6 +85,7 @@ async def handleSearchBook(sid, data: str()):
 @sio.on('downloadBook')
 async def handleDownloadBook(sid, data: str()):
 	await bots[sid].download_book(data)
+	await sio.emit('downloadBook', None)
 
 if (__name__ == "__main__"):
 	uvicorn.run("app:app", host="0.0.0.0", port=3000, reload=True)

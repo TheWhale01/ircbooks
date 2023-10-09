@@ -1,6 +1,6 @@
 env/
 .vscode/
 SearchBot*
-backend/books/static/search_history/*
-backend/books/static/downloaded/*
+backend/static/search_history/*
+backend/static/downloaded/*
 __pycache__

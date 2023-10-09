@@ -43,6 +43,11 @@ export default {
 		catch (error: unknown) { router.push('/'); }
 		this.socket.on('searchBook', (response) => {
 			this.showLoading = false;
+			if (!response) {
+				this.bookName = '';
+				console.log("No book found.");
+				return ;
+			}
 			this.results = response;
 			this.showResults = true;
 		})

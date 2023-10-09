@@ -7,7 +7,7 @@
 					<span>{{ book.title }}</span>
 					<span>{{ book.ext }}</span>
 					<span>{{ book.size }}</span>
-					<button @click="download_book(book)">download</button>
+					<button type="button" @click="download_book(book.download_line)">download</button>
 				</div>
 			</li>
 		</ul>
@@ -15,16 +15,18 @@
 			<li v-for="parsingError in parsingErrors">
 				<div>
 					<span>{{ parsingError }}</span>
-					<button>download</button>
+					<button type="button" @click="download_book(parsingError)">download</button>
 				</div>
 			</li>
 		</ul>
 	</div>
+	<Loading v-if="showLoading" />
 </template>
 <script lang="ts">
 import router from '@/router';
 import type { Socket } from 'socket.io-client';
 import { getSocketInstance } from '@/services/socketio.service';
+import Loading from './Loading.vue';
 
 interface Book {
 	author: string;
@@ -35,12 +37,17 @@ interface Book {
 }
 
 export default {
+	components: {
+		Loading,
+	},
+
 	props: ['results'],
 
 	data() {
 		return {
 			socket: {} as Socket,
 			books: [] as Book[],
+			showLoading: false as boolean,
 			parsingErrors: [] as string[],
 		}
 	},
@@ -69,11 +76,15 @@ export default {
 				});
 			}
 		}
+		this.socket.on('downloadBook', () => {
+			this.showLoading = false;
+		});
 	},
 
 	methods: {
-		download_book(book: Book) {
-			this.socket.emit('downloadBook', book.download_line);
+		download_book(download_line: string) {
+			this.socket.emit('downloadBook', download_line);
+			this.showLoading = true;
 		}
 	}
 }
