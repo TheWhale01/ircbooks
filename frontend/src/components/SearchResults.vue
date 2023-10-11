@@ -1,5 +1,5 @@
 <template>
-	<div class="search results">
+	<div class="search_results">
 		<ul>
 			<li v-for="book in books">
 				<div>
@@ -11,6 +11,7 @@
 				</div>
 			</li>
 		</ul>
+		<h3>Parsing errors:</h3>
 		<ul>
 			<li v-for="parsingError in parsingErrors">
 				<div>
@@ -52,10 +53,6 @@ export default {
 		}
 	},
 
-	beforeUnmount() {
-		this.socket.disconnect();
-	},
-
 	mounted() {
 		try {this.socket = getSocketInstance();}
 		catch (error) {router.push('/');}
@@ -89,3 +86,10 @@ export default {
 	}
 }
 </script>
+<style>
+.search_results {
+	height: 100%;
+	overflow-y: scroll;
+	border: 2px solid red;
+}
+</style>

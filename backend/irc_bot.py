@@ -73,6 +73,8 @@ class IRCbot:
 		return (await self.__get_response())
 
 	async def disconnect(self):
+		if (not self.__writer):
+			return
 		self.__writer.close()
 		await self.__writer.wait_closed()
 	
@@ -86,11 +88,9 @@ class IRCbot:
 		if (not filename):
 			response = await self.privmsg(f'@search {book_name}')
 			while ("DCC SEND" not in response):
-				print(response)
-				if ('SearchBot' in response and 'Sorry' in response):
-					raise Exception('No book found.')
+				# if ('SearchBot' in response and 'Sorry' in response):
+				# 	raise Exception('No book found.')
 				response = await self.__get_response()
-			print(response)
 			args = response.split(':')[2]
 			args = args.split(' ')
 			filename = os.path.join(self.__search_history_path, args[2])

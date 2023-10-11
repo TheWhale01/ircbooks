@@ -3,6 +3,6 @@
 </template>
 <style scoped>
 p {
-	color: red;
+	color: #D80032;
 }
 </style>

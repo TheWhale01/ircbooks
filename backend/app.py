@@ -49,7 +49,6 @@ def parseLine(line: str()) -> dict():
 @sio.event
 async def connect(sid, environ):
 	bots[sid] = IRCbot('irc.irchighway.net', 6669)
-	await bots[sid].connect()
 	print(f"Connected: {sid}")
 
 @sio.event
@@ -60,12 +59,13 @@ async def disconnect(sid):
 @sio.on('try_nickname')
 async def handleTryNickname(sid, data: str()):
 	try:
+		await bots[sid].connect()
 		await bots[sid].user()
 		await bots[sid].nick(data)
 		await bots[sid].join("#ebooks")
 	except Exception as e:
-		print(e)
 		await sio.emit('try_nickname', False, room=sid)
+		await bots[sid].disconnect()
 		return
 	await sio.emit('try_nickname', True, room=sid)
 

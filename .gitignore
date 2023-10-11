@@ -4,3 +4,4 @@ SearchBot*
 backend/static/search_history/*
 backend/static/downloaded/*
 __pycache__
+*:Zone.Identifier
